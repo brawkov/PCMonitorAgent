@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat - Websocket Kotlin</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+
+    <style>
+        .full-height { height: 100%; }
+        .input-text  { height: 10%;  }
+        .chat-text   { height: 90%;  }
+        .border      { border: 1px black; }
+    </style>
+</head>
+<body class="full-height">
+<div class="container-fluid full-height">
+    <div class="row chat-text">
+        <div class="col-md-10 border chat-text" id="chatbox">
+        </div>
+</div>
+
+<script>
+     var token = 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0MkB0ZXN0LmNvbSIsImlhdCI6MTU5ODg0NDU2NSwiZXhwIjoxNTk4OTMwOTY1fQ.dKTlkfAT0s0ZFfMQAr1DtpBklg_ukPK6UnrStiZJgbR7-CKEcUvKF-6Y8VSUuNCkBSCAAxYA-zFOjKOCwqXqLQ'
+    //var webSocket = new WebSocket("ws://" + location.hostname + ":" + location.port + "/chat");
+     var pcID = "";
+     while (pcID == "") pcID = prompt("введите ИД");
+     // var webSocket = new SockJS(`http://localhost:8080/getStatePC?pcId=${pcID}`);
+     var webSocket = new SockJS(`https://whispering-bayou-77904.herokuapp.com/getStatePC?pcId=${pcID}`)
+     // console.log( new SockJS(`https://whispering-bayou-77904.herokuapp.com/getStatePC?pcId=${pcID}`))
+     // var webSocket = new SockJS('http://localhost:8080/getStatePC?pcID=999');
+     webSocket.onopen = function() {
+         console.log('open');
+     };
+     webSocket.onclose = function() {
+         console.log('close');
+     };
+
+    // var stompClient = Stomp.over(webSocket);
+    //
+    // function onConnected() {
+    //     // Subscribe to the Public Topic
+    //     stompClient.subscribe('/topic/public', function (message){console.log("Got New MSG",message)},{Authorization: token});
+    //
+    //     stompClient.send("/app/chat.sendMessage", {testheader: 'test', Authorization: token}, JSON.stringify({type: "CHAT",content: 'new send message'}));
+    // }
+    // function onError(error) {
+    //     console.log("error: ",error)
+    // }
+
+
+    // Authorization= Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNT
+    webSocket.onmessage = function (msg) {
+        console.log("NEW_MESSAGE: ",msg)
+        receievMsg(JSON.parse(msg.data)) }
+    webSocket.onclose = function() { alert("Server Disconnect You"); }
+    // webSocket.onopen = function() {
+    //     var name = "";
+    //     while (name == "") name = prompt("введите ИД");
+    //     sendMessage("join", +name);
+    //     // sendMessage("join", 9999);
+    // }
+    $("#msg").keypress(function(e) {
+        if(e.which == 13) sendMessage("say", e.target.value);
+    });
+    function sendMessage(type, data) {
+        if (data !== "") {
+            webSocket.send(JSON.stringify({type: type, data: data}));
+        }
+    }
+    function receievMsg(msg) {
+        if (msg.type == "update") {
+            console.log(msg.data)
+            // console.log(JSON.parse("pcCpuLoad" + msg.data.data))
+            $("#chatbox").html("<p>"+"pcId: "+msg.data.pcId+" pcCpuLoad: "+msg.data.pcCpuLoad+"</p>");
+        }
+    }
+</script>
+</body>
+</html>
